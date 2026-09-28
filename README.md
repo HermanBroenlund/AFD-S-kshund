@@ -1,75 +1,50 @@
-# AFD Søkshund – v0.1 kildepakke
+# AFD Søkshund
 
-Første kodebase for AFD Søkshund. Designet følger AFD-appfamilien: gul/svart profil, store knapper, Supabase Auth med kode på e-post, Flutter for Android/iOS.
+Flutter-app for Android og iOS med Supabase-backend.
 
-## Implementert i denne pakken
+## Plattform
+- Android: `no.afgruppen.afdsokshund`
+- iOS bundle ID: `no.afgruppen.afdsokshund`
+- Appnavn: **AFD Søkshund**
 
-- Fem hovedknapper: Oppdrag, Trening, Kalender, Hunder, Historikk.
-- Oppdrag > Start søk > Bruk planlagt søk / Nytt søk.
-- Planlegg søk med firma, org.nr., kontaktperson, e-post, telefon, hund, automatisk innlogget fører, dato, kartområde og notat.
-- Kart med vanlig kart/flyfoto og linje rundt definert område.
-- MET Norway vær-snapshot ved oppstart.
-- Aktivt søk med pause/fortsett, fører-GPS-spor, søksområdebilde, funnregistrering og avslutning.
-- Søksområdebilder og funnbilder lagres separat.
-- Funn: mobilposisjon, beskrivelse, bilder og håndteringsstatus.
-- Trening: treningsfunn på kart med dato, posisjon, bilde, type/kategori, redigering og sletting.
-- Kalender: felles kalender for hendelser og dagsnotater.
-- Hunder: hunderegister, tracker-ID og hundehendelser til kalender.
-- Historikkgrunnlag for full rapport.
-- Supabase-schema med RLS og private Storage-buckets.
-- Datamodell klar for hunde-GPS (`search_track_points.source = dog`).
-
-## Ikke ferdig i v0.1
-
-- Leverandørspesifikk hunde-GPS/4G-integrasjon. Datamodellen er klar, men hardware/API må velges først.
-- Ferdig layoutet PDF- og DOCX-rapportgenerator. Tabellen `reports` og rapportgrunnlaget er på plass; dette er neste kodeblokk.
-- Bakgrunnssporing når mobilen er låst/minimert. V1 logger mens aktiv-søk-skjermen kjører.
-- Direkte åpning fra kalenderhendelse til alle tilknyttede objekttyper er ikke koblet ferdig ennå.
-
-## Opprette Flutter-skallet
-
-Denne arbeidsøkten har ikke Flutter SDK installert, så Android/iOS-skallet kan ikke autogenereres eller kompileres her. På utviklingsmaskinen:
-
-```bash
-flutter create --org no.afgruppen.afd --platforms=android,ios .
-flutter pub get
-```
-
-Behold `lib/`, `assets/`, `supabase/`, `pubspec.yaml` og `analysis_options.yaml` fra denne pakken når Flutter-skallet opprettes.
-
-## Supabase
-
-Opprett et separat prosjekt når du ønsker det, kjør SQL-en i:
-
-`supabase/migrations/001_initial_schema.sql`
-
-Legg deretter inn første godkjente bruker i `app_members`:
-
-```sql
-insert into public.app_members (user_id, full_name, role)
-values ('AUTH-USER-UUID', 'Navn', 'admin');
-```
-
-Appen bruker `shouldCreateUser: false`, slik at tilfeldige e-postadresser ikke automatisk oppretter nye brukere.
-
-Start lokalt med:
+## Første oppsett
+1. Installer Flutter stable.
+2. Kjør `flutter pub get`.
+3. Legg Supabase-verdiene inn som `--dart-define` eller GitHub Secrets:
+   - `SUPABASE_URL`
+   - `SUPABASE_PUBLISHABLE_KEY`
+4. Kjør SQL-filen `supabase/migrations/001_initial_schema.sql` i AFD Søkshund-prosjektet.
+5. Start lokalt:
 
 ```bash
 flutter run \
   --dart-define=SUPABASE_URL=https://PROJECT.supabase.co \
-  --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-## E-postkode
+## GitHub Actions
+- `Android` bygger release APK og legger den som artifact.
+- `iOS compile check` verifiserer iOS-bygg uten signering.
+- For TestFlight kan samme signing/distribution-oppsett som AFD Drone/AFD IMT kopieres inn når Apple bundle-ID/provisioning er opprettet.
 
-Supabase Email OTP-template må bruke `{{ .Token }}`. Dette er samme OTP-prinsipp som i de andre AFD-appene.
+## Funksjoner i førsteversjonen
+- Oppdrag
+- Planlegg søk
+- Start planlagt eller nytt søk
+- Hund og fører
+- Firma/org.nr./kontaktperson
+- Kart og polygon
+- Kart/flyfoto
+- MET-vær
+- GPS-spor
+- Pause/fortsett/avslutt
+- Bilder av søksområdet som egen kategori
+- Registrerte funn med egne bilder og posisjon
+- Trening og treningsfunn
+- Felles kalender
+- Hunder
+- Historikk
+- Datamodell klargjort for ekstern hunde-GPS
 
-## Kart
-
-- Vanlig kart: OpenStreetMap.
-- Flyfoto: Esri World Imagery.
-- Før produksjonsbruk bør tile-provider/bruksvilkår og ønsket kartleverandør låses endelig.
-
-## Vær
-
-`WeatherService` bruker MET Norway Locationforecast og lagrer værdata som snapshot når et søk starter.
+## Viktig
+`release` på Android bruker foreløpig debug-signering for å gjøre første CI-bygg enkelt. Før distribusjon må vi legge inn samme keystore/signering som de andre AFD-appene.
