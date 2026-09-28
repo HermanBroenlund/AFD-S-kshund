@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/app_config.dart';
 import 'core/app_theme.dart';
 import 'pages/auth/login_page.dart';
-import 'pages/home/home_page.dart';
+import 'pages/auth/access_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,7 +27,7 @@ class AfdSokshundApp extends StatelessWidget {
       theme: buildAfdTheme(),
       home: StreamBuilder<AuthState>(
         stream: supabase.auth.onAuthStateChange,
-        builder: (_, __) => supabase.auth.currentSession == null ? const LoginPage() : const HomePage(),
+        builder: (_, __) => supabase.auth.currentSession == null ? const LoginPage() : const AccessGate(),
       ),
     );
   }

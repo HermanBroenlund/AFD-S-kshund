@@ -12,7 +12,7 @@ class TreningPage extends StatefulWidget {
 
 class _TreningPageState extends State<TreningPage> {
   Future<List<Map<String,dynamic>>> load() => Supabase.instance.client
-      .from('training_finds').select().order('buried_at', ascending: false)
+      .from('sokshund_training_finds').select().order('buried_at', ascending: false)
       .then((v) => List<Map<String,dynamic>>.from(v));
 
   @override
@@ -109,7 +109,7 @@ class _TreningPageState extends State<TreningPage> {
     );
     if (save != true || title.text.trim().isEmpty) return;
     final client = Supabase.instance.client;
-    await client.from('calendar_events').insert({
+    await client.from('sokshund_calendar_events').insert({
       'event_type': 'training',
       'title': title.text.trim(),
       'notes': notes.text.trim(),

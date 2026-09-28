@@ -14,7 +14,7 @@ class _KalenderPageState extends State<KalenderPage> {
   List<Map<String,dynamic>> events = [];
   @override
   void initState() { super.initState(); load(); }
-  Future<void> load() async { final v = await Supabase.instance.client.from('calendar_events').select().order('starts_at'); if (mounted) setState(() => events = List<Map<String,dynamic>>.from(v)); }
+  Future<void> load() async { final v = await Supabase.instance.client.from('sokshund_calendar_events').select().order('starts_at'); if (mounted) setState(() => events = List<Map<String,dynamic>>.from(v)); }
   List<Map<String,dynamic>> forDay(DateTime day) => events.where((e) { final d = DateTime.tryParse(e['starts_at'].toString()); return d != null && d.year==day.year && d.month==day.month && d.day==day.day; }).toList();
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -40,7 +40,7 @@ class _KalenderPageState extends State<KalenderPage> {
     final c = TextEditingController();
     final text = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(title: Text('Notat ${selected.day}.${selected.month}.${selected.year}'), content: TextField(controller:c,maxLines:4), actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Avbryt')),FilledButton(onPressed:()=>Navigator.pop(ctx,c.text.trim()),child:const Text('Lagre'))]));
     if (text == null || text.isEmpty) return;
-    await Supabase.instance.client.from('calendar_events').insert({'event_type':'note','title':'Notat','notes':text,'starts_at':DateTime(selected.year,selected.month,selected.day,12).toIso8601String(),'created_by':Supabase.instance.client.auth.currentUser!.id});
+    await Supabase.instance.client.from('sokshund_calendar_events').insert({'event_type':'note','title':'Notat','notes':text,'starts_at':DateTime(selected.year,selected.month,selected.day,12).toIso8601String(),'created_by':Supabase.instance.client.auth.currentUser!.id});
     await load();
   }
 }

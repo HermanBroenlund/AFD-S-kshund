@@ -1,50 +1,37 @@
 # AFD Søkshund
 
-Flutter-app for Android og iOS med Supabase-backend.
+Flutter-app for Android og iOS. Appen er koblet til samme Supabase-prosjekt som AFD IMT og AFD Lager, men all operativ Søkshund-data ligger separat i egne `sokshund_*`-tabeller og private Storage-buckets.
 
-## Plattform
-- Android: `no.afgruppen.afdsokshund`
-- iOS bundle ID: `no.afgruppen.afdsokshund`
-- Appnavn: **AFD Søkshund**
+## Tilgang
 
-## Første oppsett
-1. Installer Flutter stable.
-2. Kjør `flutter pub get`.
-3. Legg Supabase-verdiene inn som `--dart-define` eller GitHub Secrets:
-   - `SUPABASE_URL`
-   - `SUPABASE_PUBLISHABLE_KEY`
-4. Kjør SQL-filen `supabase/migrations/001_initial_schema.sql` i AFD Søkshund-prosjektet.
-5. Start lokalt:
+Innlogging bruker samme Supabase Auth/e-postkode som IMT/Lager. Tilgang til denne appen styres separat med `profiles.can_access_sokshund`. En bruker kan derfor ha tilgang til IMT, Lager og/eller Søkshund uavhengig av hverandre.
+
+Administrator får et ikon for **Tilganger** øverst på startsiden. Der kan eksisterende brukere gis/fjernes Søkshund-tilgang, og nye brukere kan opprettes via den samme `invite-user` Edge Function-løsningen som de andre appene.
+
+## Backend
+
+Supabase URL og publishable key er konfigurert i `lib/core/app_config.dart`. Det ligger aldri service-role eller andre hemmelige nøkler i mobilappen.
+
+Backend er allerede konfigurert i det delte prosjektet. Ikke kjør et gammelt generisk schema på prosjektet.
+
+## Bygg
+
+Android:
 
 ```bash
-flutter run \
-  --dart-define=SUPABASE_URL=https://PROJECT.supabase.co \
-  --dart-define=SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+flutter pub get
+flutter build apk --release
 ```
 
+iOS compile check:
+
+```bash
+flutter pub get
+flutter build ios --release --no-codesign
+```
+
+GitHub Actions ligger i `.github/workflows/`.
+
+
 ## GitHub Actions
-- `Android` bygger release APK og legger den som artifact.
-- `iOS compile check` verifiserer iOS-bygg uten signering.
-- For TestFlight kan samme signing/distribution-oppsett som AFD Drone/AFD IMT kopieres inn når Apple bundle-ID/provisioning er opprettet.
-
-## Funksjoner i førsteversjonen
-- Oppdrag
-- Planlegg søk
-- Start planlagt eller nytt søk
-- Hund og fører
-- Firma/org.nr./kontaktperson
-- Kart og polygon
-- Kart/flyfoto
-- MET-vær
-- GPS-spor
-- Pause/fortsett/avslutt
-- Bilder av søksområdet som egen kategori
-- Registrerte funn med egne bilder og posisjon
-- Trening og treningsfunn
-- Felles kalender
-- Hunder
-- Historikk
-- Datamodell klargjort for ekstern hunde-GPS
-
-## Viktig
-`release` på Android bruker foreløpig debug-signering for å gjøre første CI-bygg enkelt. Før distribusjon må vi legge inn samme keystore/signering som de andre AFD-appene.
+Workflowene startes kun manuelt fra GitHub Actions via **Run workflow**. Commit/push starter ingen build automatisk.

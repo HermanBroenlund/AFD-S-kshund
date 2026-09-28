@@ -11,15 +11,15 @@ class SearchRepository {
 
   Future<List<Map<String, dynamic>>> plannedSearches() async {
     final data = await client
-        .from('searches')
-        .select('*, dogs(name)')
+        .from('sokshund_searches')
+        .select('*, sokshund_dogs(name)')
         .eq('status', 'planned')
         .order('planned_date');
     return List<Map<String, dynamic>>.from(data);
   }
 
   Future<Map<String, dynamic>> getSearch(String id) async {
-    return await client.from('searches').select('*, dogs(name)').eq('id', id).single();
+    return await client.from('sokshund_searches').select('*, sokshund_dogs(name)').eq('id', id).single();
   }
 
   Future<String> savePlanned(SearchDraft draft) async {
@@ -39,17 +39,17 @@ class SearchRepository {
     };
     Map<String, dynamic> data;
     if (draft.id == null) {
-      data = await client.from('searches').insert(values).select('id').single();
+      data = await client.from('sokshund_searches').insert(values).select('id').single();
     } else {
-      data = await client.from('searches').update(values).eq('id', draft.id!).select('id').single();
+      data = await client.from('sokshund_searches').update(values).eq('id', draft.id!).select('id').single();
     }
     final id = data['id'] as String;
-    await client.from('calendar_events').delete().eq('linked_table', 'searches').eq('linked_id', id).eq('event_type', 'planned_search');
-    await client.from('calendar_events').insert({
+    await client.from('sokshund_calendar_events').delete().eq('linked_table', 'sokshund_searches').eq('linked_id', id).eq('event_type', 'planned_search');
+    await client.from('sokshund_calendar_events').insert({
       'event_type': 'planned_search',
       'title': 'Planlagt søk: ${draft.companyName}',
       'starts_at': draft.plannedDate.toIso8601String(),
-      'linked_table': 'searches',
+      'linked_table': 'sokshund_searches',
       'linked_id': id,
       'created_by': userId,
     });
@@ -60,7 +60,7 @@ class SearchRepository {
     final base = _safeName(draft.companyName);
     final date = '${draft.plannedDate.year.toString().padLeft(4, '0')}-${draft.plannedDate.month.toString().padLeft(2, '0')}-${draft.plannedDate.day.toString().padLeft(2, '0')}';
     final prefix = 'S_${base}_$date';
-    final existing = await client.from('searches').select('search_name').like('search_name', '$prefix%');
+    final existing = await client.from('sokshund_searches').select('search_name').like('search_name', '$prefix%');
     var searchName = prefix;
     if ((existing as List).isNotEmpty) searchName = '${prefix}_${((existing).length + 1).toString().padLeft(2, '0')}';
 
@@ -83,12 +83,12 @@ class SearchRepository {
 
     Map<String, dynamic> row;
     if (draft.id != null) {
-      row = await client.from('searches').update(payload).eq('id', draft.id!).select().single();
+      row = await client.from('sokshund_searches').update(payload).eq('id', draft.id!).select().single();
     } else {
-      row = await client.from('searches').insert(payload).select().single();
+      row = await client.from('sokshund_searches').insert(payload).select().single();
     }
     final searchId = row['id'] as String;
-    await client.from('weather_snapshots').insert({
+    await client.from('sokshund_weather_snapshots').insert({
       'search_id': searchId,
       'temperature_c': weather.temperatureC,
       'wind_speed_ms': weather.windSpeedMs,
@@ -102,7 +102,7 @@ class SearchRepository {
   }
 
   Future<void> addTrackPoint(String searchId, {required double lat, required double lng, double? accuracy, String source = 'handler'}) async {
-    await client.from('search_track_points').insert({
+    await client.from('sokshund_search_track_points').insert({
       'search_id': searchId,
       'source': source,
       'latitude': lat,
@@ -113,20 +113,20 @@ class SearchRepository {
   }
 
   Future<void> pause(String searchId) async {
-    await client.from('searches').update({'status': 'paused'}).eq('id', searchId);
-    await client.from('search_pauses').insert({'search_id': searchId, 'paused_at': DateTime.now().toIso8601String()});
+    await client.from('sokshund_searches').update({'status': 'paused'}).eq('id', searchId);
+    await client.from('sokshund_search_pauses').insert({'search_id': searchId, 'paused_at': DateTime.now().toIso8601String()});
   }
 
   Future<void> resume(String searchId) async {
-    await client.from('searches').update({'status': 'active'}).eq('id', searchId);
-    final open = await client.from('search_pauses').select('id').eq('search_id', searchId).isFilter('resumed_at', null).order('paused_at', ascending: false).limit(1);
+    await client.from('sokshund_searches').update({'status': 'active'}).eq('id', searchId);
+    final open = await client.from('sokshund_search_pauses').select('id').eq('search_id', searchId).isFilter('resumed_at', null).order('paused_at', ascending: false).limit(1);
     if ((open as List).isNotEmpty) {
-      await client.from('search_pauses').update({'resumed_at': DateTime.now().toIso8601String()}).eq('id', open.first['id']);
+      await client.from('sokshund_search_pauses').update({'resumed_at': DateTime.now().toIso8601String()}).eq('id', open.first['id']);
     }
   }
 
   Future<void> complete(String searchId, String summary) async {
-    await client.from('searches').update({
+    await client.from('sokshund_searches').update({
       'status': 'completed',
       'completed_at': DateTime.now().toIso8601String(),
       'summary': summary,
@@ -135,8 +135,8 @@ class SearchRepository {
 
   Future<String> uploadSearchAreaPhoto(String searchId, Uint8List bytes, String extension, {double? lat, double? lng}) async {
     final path = '$searchId/area/${DateTime.now().millisecondsSinceEpoch}.$extension';
-    await client.storage.from('search-media').uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: false));
-    await client.from('search_photos').insert({
+    await client.storage.from('sokshund-search-media').uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: false));
+    await client.from('sokshund_search_photos').insert({
       'search_id': searchId,
       'storage_path': path,
       'photo_type': 'search_area',
@@ -155,7 +155,7 @@ class SearchRepository {
     required double latitude,
     required double longitude,
   }) async {
-    final row = await client.from('findings').insert({
+    final row = await client.from('sokshund_findings').insert({
       'search_id': searchId,
       'description': description,
       'handling': handling,
@@ -169,8 +169,8 @@ class SearchRepository {
 
   Future<void> uploadFindingPhoto(String searchId, String findingId, Uint8List bytes, String extension) async {
     final path = '$searchId/findings/$findingId/${DateTime.now().millisecondsSinceEpoch}.$extension';
-    await client.storage.from('search-media').uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: false));
-    await client.from('finding_photos').insert({
+    await client.storage.from('sokshund-search-media').uploadBinary(path, bytes, fileOptions: const FileOptions(upsert: false));
+    await client.from('sokshund_finding_photos').insert({
       'finding_id': findingId,
       'storage_path': path,
       'taken_at': DateTime.now().toIso8601String(),

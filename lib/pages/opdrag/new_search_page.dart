@@ -54,7 +54,7 @@ class _NewSearchPageState extends State<NewSearchPage> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.mode == SearchFormMode.plan ? 'Planlegg søk' : 'Nytt søk')),
     body: FutureBuilder<List<Map<String, dynamic>>>(
-      future: Supabase.instance.client.from('dogs').select('id,name').eq('active', true).order('name').then((v) => List<Map<String,dynamic>>.from(v)),
+      future: Supabase.instance.client.from('sokshund_dogs').select('id,name').eq('active', true).order('name').then((v) => List<Map<String,dynamic>>.from(v)),
       builder: (context, snap) {
         final dogs = snap.data ?? [];
         return Form(

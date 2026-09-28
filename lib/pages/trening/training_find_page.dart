@@ -40,7 +40,7 @@ class _TrainingFindPageState extends State<TrainingFindPage> {
     String? photoPath = widget.existing?['photo_path'] as String?;
     if (photo != null) {
       photoPath = 'training/${DateTime.now().millisecondsSinceEpoch}.${photo!.name.split('.').last}';
-      await client.storage.from('training-media').uploadBinary(photoPath, await photo!.readAsBytes());
+      await client.storage.from('sokshund-training-media').uploadBinary(photoPath, await photo!.readAsBytes());
     }
     final values = {
       'material_type': type.text.trim(),
@@ -53,13 +53,13 @@ class _TrainingFindPageState extends State<TrainingFindPage> {
     };
     String id;
     if (widget.existing == null) {
-      final row = await client.from('training_finds').insert(values).select('id').single(); id = row['id'] as String;
-      await client.from('calendar_events').insert({'event_type':'training_find','title':'Treningsfunn: ${type.text.trim()}','starts_at':values['buried_at'],'linked_table':'training_finds','linked_id':id,'created_by':client.auth.currentUser!.id});
+      final row = await client.from('sokshund_training_finds').insert(values).select('id').single(); id = row['id'] as String;
+      await client.from('sokshund_calendar_events').insert({'event_type':'training_find','title':'Treningsfunn: ${type.text.trim()}','starts_at':values['buried_at'],'linked_table':'sokshund_training_finds','linked_id':id,'created_by':client.auth.currentUser!.id});
     } else {
-      id = widget.existing!['id'] as String; await client.from('training_finds').update(values).eq('id', id);
+      id = widget.existing!['id'] as String; await client.from('sokshund_training_finds').update(values).eq('id', id);
     }
     if (mounted) Navigator.pop(context);
   }
 
-  Future<void> delete() async { await Supabase.instance.client.from('training_finds').delete().eq('id', widget.existing!['id']); if (mounted) Navigator.pop(context); }
+  Future<void> delete() async { await Supabase.instance.client.from('sokshund_training_finds').delete().eq('id', widget.existing!['id']); if (mounted) Navigator.pop(context); }
 }
