@@ -35,3 +35,13 @@ GitHub Actions ligger i `.github/workflows/`.
 
 ## GitHub Actions
 Workflowene startes kun manuelt fra GitHub Actions via **Run workflow**. Commit/push starter ingen build automatisk.
+
+## Oppdatering 0.2.0
+- Treningssiden er nå kartbasert uten listefeltet under kartet.
+- Treningsfunn viser type/kategori og nedgravningsdato direkte på kartet.
+- Trykk på et funn åpner siden «Bruk funn».
+- Gjennomførte treninger lagres i historikken.
+- Treningsfunn kan slettes/redigeres og posisjon kan velges i kart eller fra mobilen.
+- Historikk viser både oppdragsrapporter og gjennomførte treninger.
+- Rapportvisning er strukturert i seksjoner, viser bilder og har eksport til PDF/Word.
+- Rapportnavn følger RS-Firmanavn-YYYY-MM-DD.

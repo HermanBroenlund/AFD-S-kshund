@@ -59,10 +59,10 @@ class SearchRepository {
   Future<String> startSearch({required SearchDraft draft, required WeatherSnapshot weather}) async {
     final base = _safeName(draft.companyName);
     final date = '${draft.plannedDate.year.toString().padLeft(4, '0')}-${draft.plannedDate.month.toString().padLeft(2, '0')}-${draft.plannedDate.day.toString().padLeft(2, '0')}';
-    final prefix = 'S_${base}_$date';
+    final prefix = 'RS-$base-$date';
     final existing = await client.from('sokshund_searches').select('search_name').like('search_name', '$prefix%');
     var searchName = prefix;
-    if ((existing as List).isNotEmpty) searchName = '${prefix}_${((existing).length + 1).toString().padLeft(2, '0')}';
+    if ((existing as List).isNotEmpty) searchName = '$prefix-${((existing).length + 1).toString().padLeft(2, '0')}';
 
     final payload = {
       'search_name': searchName,

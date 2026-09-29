@@ -1,84 +1,175 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'training_find_page.dart';
+import 'use_training_find_page.dart';
 
 class TreningPage extends StatefulWidget {
   const TreningPage({super.key});
+
   @override
   State<TreningPage> createState() => _TreningPageState();
 }
 
 class _TreningPageState extends State<TreningPage> {
-  Future<List<Map<String,dynamic>>> load() => Supabase.instance.client
-      .from('sokshund_training_finds').select().order('buried_at', ascending: false)
-      .then((v) => List<Map<String,dynamic>>.from(v));
+  bool satellite = false;
+
+  Future<List<Map<String, dynamic>>> load() => Supabase.instance.client
+      .from('sokshund_training_finds')
+      .select()
+      .order('buried_at', ascending: false)
+      .then((v) => List<Map<String, dynamic>>.from(v));
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: const Text('Trening'),
-      actions: [
-        IconButton(
-          tooltip: 'Legg trening i kalender',
-          onPressed: addTrainingEvent,
-          icon: const Icon(Icons.event_available),
+        appBar: AppBar(
+          title: const Text('Trening'),
+          actions: [
+            IconButton(
+              tooltip: 'Legg trening i kalender',
+              onPressed: addTrainingEvent,
+              icon: const Icon(Icons.event_available),
+            ),
+          ],
         ),
-      ],
-    ),
-    floatingActionButton: FloatingActionButton.extended(
-      onPressed: () async {
-        await Navigator.push(context, MaterialPageRoute(builder: (_) => const TrainingFindPage()));
-        setState(() {});
-      },
-      icon: const Icon(Icons.add_location_alt),
-      label: const Text('Nytt treningsfunn'),
-    ),
-    body: FutureBuilder<List<Map<String, dynamic>>>(
-      future: load(),
-      builder: (_, snap) {
-        final rows = snap.data ?? [];
-        return Column(children: [
-          Expanded(
-            flex: 3,
-            child: FlutterMap(
-              options: const MapOptions(initialCenter: LatLng(59.9139, 10.7522), initialZoom: 10),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TrainingFindPage()),
+            );
+            setState(() {});
+          },
+          icon: const Icon(Icons.add_location_alt),
+          label: const Text('Nytt treningsfunn'),
+        ),
+        body: FutureBuilder<List<Map<String, dynamic>>>(
+          future: load(),
+          builder: (_, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final rows = snap.data ?? [];
+            final center = rows.isNotEmpty
+                ? LatLng(
+                    (rows.first['latitude'] as num).toDouble(),
+                    (rows.first['longitude'] as num).toDouble(),
+                  )
+                : const LatLng(59.9139, 10.7522);
+
+            return Stack(
               children: [
-                TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'no.afgruppen.afd.sokshund'),
-                MarkerLayer(
-                  markers: rows.map((r) => Marker(
-                    point: LatLng((r['latitude'] as num).toDouble(), (r['longitude'] as num).toDouble()),
-                    width: 42,
-                    height: 42,
-                    child: const Icon(Icons.location_on, size: 40),
-                  )).toList(),
+                Positioned.fill(
+                  child: FlutterMap(
+                    key: ValueKey('training-map-${rows.length}-$satellite'),
+                    options: MapOptions(
+                      initialCenter: center,
+                      initialZoom: rows.isNotEmpty ? 14 : 10,
+                    ),
+                    children: [
+                      TileLayer(
+                        urlTemplate: satellite
+                            ? 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+                            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        userAgentPackageName: 'no.afgruppen.afd.sokshund',
+                      ),
+                      MarkerLayer(
+                        markers: rows.map((r) {
+                          final date = DateTime.tryParse(r['buried_at']?.toString() ?? '');
+                          final labelDate = date == null ? '-' : DateFormat('dd.MM.yy').format(date.toLocal());
+                          final category = (r['material_type'] ?? 'Funn').toString().trim().isEmpty
+                              ? 'Funn'
+                              : r['material_type'].toString().trim();
+                          return Marker(
+                            point: LatLng(
+                              (r['latitude'] as num).toDouble(),
+                              (r['longitude'] as num).toDouble(),
+                            ),
+                            width: 112,
+                            height: 72,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => UseTrainingFindPage(find: r),
+                                  ),
+                                );
+                                if (mounted) setState(() {});
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withValues(alpha: 0.94),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.black26),
+                                      boxShadow: const [
+                                        BoxShadow(blurRadius: 3, color: Colors.black26),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          category,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+                                        ),
+                                        Text(labelDate, style: const TextStyle(fontSize: 10)),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(Icons.location_on, size: 28),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
                 ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Material(
+                    color: Colors.white.withValues(alpha: 0.94),
+                    borderRadius: BorderRadius.circular(12),
+                    elevation: 3,
+                    child: IconButton(
+                      tooltip: satellite ? 'Vanlig kart' : 'Flyfoto',
+                      onPressed: () => setState(() => satellite = !satellite),
+                      icon: Icon(satellite ? Icons.map_outlined : Icons.satellite_alt),
+                    ),
+                  ),
+                ),
+                if (rows.isEmpty)
+                  const Positioned(
+                    left: 20,
+                    right: 20,
+                    top: 24,
+                    child: Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(14),
+                        child: Text(
+                          'Ingen treningsfunn er registrert ennå. Trykk «Nytt treningsfunn» for å legge inn det første.',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: ListView.builder(
-              itemCount: rows.length,
-              itemBuilder: (_, i) {
-                final r = rows[i];
-                return ListTile(
-                  title: Text(r['material_type'] ?? 'Treningsfunn'),
-                  subtitle: Text((r['buried_at'] ?? '').toString()),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () async {
-                    await Navigator.push(context, MaterialPageRoute(builder: (_) => TrainingFindPage(existing: r)));
-                    setState(() {});
-                  },
-                );
-              },
-            ),
-          ),
-        ]);
-      },
-    ),
-  );
+            );
+          },
+        ),
+      );
 
   Future<void> addTrainingEvent() async {
     final title = TextEditingController();
