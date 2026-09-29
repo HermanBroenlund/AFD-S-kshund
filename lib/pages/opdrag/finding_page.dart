@@ -20,7 +20,9 @@ class _FindingPageState extends State<FindingPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Registrer funn')),
-    body: ListView(padding: const EdgeInsets.all(16), children: [
+    body: SafeArea(
+      top: false,
+      child: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 28), children: [
       TextField(controller: description, maxLines: 5, decoration: const InputDecoration(labelText: 'Beskrivelse av funnet')),
       const SizedBox(height: 12),
       DropdownButtonFormField<String>(
@@ -36,7 +38,8 @@ class _FindingPageState extends State<FindingPage> {
       ElevatedButton.icon(onPressed: () async { final p = await ImagePicker().pickImage(source: ImageSource.camera, imageQuality: 88); if (p != null) setState(() => photos.add(p)); }, icon: const Icon(Icons.camera_alt), label: Text('TA BILDE AV FUNN (${photos.length})')),
       const SizedBox(height: 16),
       ElevatedButton(onPressed: busy ? null : save, child: const Text('LAGRE FUNN')),
-    ]),
+      ]),
+    ),
   );
 
   Future<void> save() async {

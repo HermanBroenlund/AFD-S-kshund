@@ -32,9 +32,11 @@ class _UseTrainingFindPageState extends State<UseTrainingFindPage> {
     final buried = DateTime.tryParse(f['buried_at']?.toString() ?? '')?.toLocal();
     return Scaffold(
       appBar: AppBar(title: const Text('Bruk funn')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: SafeArea(
+        top: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+          children: [
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -112,7 +114,8 @@ class _UseTrainingFindPageState extends State<UseTrainingFindPage> {
             icon: const Icon(Icons.delete_outline),
             label: const Text('SLETT FUNN'),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

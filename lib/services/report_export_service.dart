@@ -48,7 +48,7 @@ class ReportExportService {
 
   Future<Uint8List> _buildPdf(Map<String, dynamic> report, {String? handlerName}) async {
     final doc = pw.Document();
-    final logo = (await rootBundle.load('assets/images/afd_sokshund_logo.png')).buffer.asUint8List();
+    final logo = (await rootBundle.load('assets/images/af_logo.png')).buffer.asUint8List();
     final areaPhotos = List<Map<String, dynamic>>.from(report['sokshund_search_photos'] ?? const []);
     final findings = List<Map<String, dynamic>>.from(report['sokshund_findings'] ?? const []);
     final weatherRows = List<Map<String, dynamic>>.from(report['sokshund_weather_snapshots'] ?? const []);
@@ -181,6 +181,7 @@ class ReportExportService {
     final findings = List<Map<String, dynamic>>.from(report['sokshund_findings'] ?? const []);
     final weatherRows = List<Map<String, dynamic>>.from(report['sokshund_weather_snapshots'] ?? const []);
     final weather = weatherRows.isEmpty ? <String, dynamic>{} : weatherRows.first;
+    final afLogo = (await rootBundle.load('assets/images/af_logo.png')).buffer.asUint8List();
 
     final images = <_DocxImage>[];
     for (final p in areaPhotos) {
@@ -195,6 +196,7 @@ class ReportExportService {
     }
 
     final body = StringBuffer();
+    body.write(_docxImage('rId9', 1, cx: 1450000, cy: 1450000));
     body.write(_docxHeading('Rapport etter søk', 1));
     body.write(_docxParagraph(reportName(report), bold: true));
     body.write(_docxHeading('Oppdrag', 2));
@@ -227,8 +229,10 @@ class ReportExportService {
 
     final rels = StringBuffer();
     final mediaArchive = <ArchiveFile>[];
+    rels.write('<Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/af_logo.png"/>');
+    mediaArchive.add(ArchiveFile('word/media/af_logo.png', afLogo.length, afLogo));
     var relId = 10;
-    var imageNo = 1;
+    var imageNo = 2;
     String? currentSection;
     for (final img in images) {
       if (currentSection != img.section) {
@@ -253,7 +257,7 @@ class ReportExportService {
       archive.addFile(ArchiveFile(name, b.length, b));
     }
 
-    addText('[Content_Types].xml', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>''');
+    addText('[Content_Types].xml', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>''');
     addText('_rels/.rels', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>''');
     addText('word/document.xml', documentXml);
     addText('word/_rels/document.xml.rels', '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.toString()}</Relationships>''');
@@ -269,7 +273,7 @@ class ReportExportService {
 
   String _docxLine(String label, Object? value) => '<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>${_xml('$label: ')}</w:t></w:r><w:r><w:t>${_xml(_text(value))}</w:t></w:r></w:p>';
 
-  String _docxImage(String rid, int id) => '''<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="5000000" cy="3200000"/><wp:docPr id="$id" name="Bilde $id"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="$id" name="Bilde $id"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="$rid"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="5000000" cy="3200000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>''';
+  String _docxImage(String rid, int id, {int cx = 5000000, int cy = 3200000}) => '''<w:p><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="$cx" cy="$cy"/><wp:docPr id="$id" name="Bilde $id"/><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="$id" name="Bilde $id"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="$rid"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="$cx" cy="$cy"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>''';
 
   Future<Uint8List?> _loadStorageBytes(String bucket, String? path) async {
     if (path == null || path.isEmpty) return null;

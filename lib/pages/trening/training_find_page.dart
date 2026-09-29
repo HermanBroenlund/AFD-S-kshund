@@ -50,9 +50,11 @@ class _TrainingFindPageState extends State<TrainingFindPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(title: Text(widget.existing == null ? 'Nytt treningsfunn' : 'Rediger treningsfunn')),
-        body: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+        body: SafeArea(
+          top: false,
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+            children: [
             TextField(controller: type, decoration: const InputDecoration(labelText: 'Type / kategori')),
             const SizedBox(height: 10),
             TextField(controller: notes, maxLines: 4, decoration: const InputDecoration(labelText: 'Notat om nedgravingen')),
@@ -166,7 +168,8 @@ class _TrainingFindPageState extends State<TrainingFindPage> {
                 label: const Text('SLETT FUNN'),
               ),
             ],
-          ],
+            ],
+          ),
         ),
       );
 

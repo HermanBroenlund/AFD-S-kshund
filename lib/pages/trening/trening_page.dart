@@ -34,16 +34,19 @@ class _TreningPageState extends State<TreningPage> {
             ),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () async {
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: FloatingActionButton.extended(
+            onPressed: () async {
             await Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const TrainingFindPage()),
             );
             setState(() {});
           },
-          icon: const Icon(Icons.add_location_alt),
-          label: const Text('Nytt treningsfunn'),
+            icon: const Icon(Icons.add_location_alt),
+            label: const Text('Nytt treningsfunn'),
+          ),
         ),
         body: FutureBuilder<List<Map<String, dynamic>>>(
           future: load(),

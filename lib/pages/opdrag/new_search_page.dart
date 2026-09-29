@@ -53,13 +53,15 @@ class _NewSearchPageState extends State<NewSearchPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(widget.mode == SearchFormMode.plan ? 'Planlegg søk' : 'Nytt søk')),
-    body: FutureBuilder<List<Map<String, dynamic>>>(
+    body: SafeArea(
+      top: false,
+      child: FutureBuilder<List<Map<String, dynamic>>>(
       future: Supabase.instance.client.from('sokshund_dogs').select('id,name').eq('active', true).order('name').then((v) => List<Map<String,dynamic>>.from(v)),
       builder: (context, snap) {
         final dogs = snap.data ?? [];
         return Form(
           key: formKey,
-          child: ListView(padding: const EdgeInsets.all(16), children: [
+          child: ListView(padding: const EdgeInsets.fromLTRB(16, 16, 16, 28), children: [
             TextFormField(controller: company, decoration: const InputDecoration(labelText: 'Firma *'), validator: required),
             const SizedBox(height: 10),
             TextFormField(controller: org, decoration: const InputDecoration(labelText: 'Organisasjonsnummer *'), validator: required),
@@ -96,7 +98,8 @@ class _NewSearchPageState extends State<NewSearchPage> {
             ElevatedButton(onPressed: busy ? null : submit, child: Text(widget.mode == SearchFormMode.plan ? 'LAGRE PLANLAGT SØK' : 'GÅ TIL OPPSTART')),
           ]),
         );
-      },
+        },
+      ),
     ),
   );
 

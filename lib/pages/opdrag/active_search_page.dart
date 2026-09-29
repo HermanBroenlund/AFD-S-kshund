@@ -62,7 +62,19 @@ class _ActiveSearchPageState extends State<ActiveSearchPage> {
           ]),
         ),
         Expanded(child: FlutterMap(
-          options: MapOptions(initialCenter: widget.draft.area.first, initialZoom: 15),
+          options: MapOptions(
+            initialCenter: widget.draft.area.isNotEmpty
+                ? widget.draft.area.first
+                : const LatLng(59.9139, 10.7522),
+            initialZoom: 15,
+            initialCameraFit: widget.draft.area.length >= 2
+                ? CameraFit.coordinates(
+                    coordinates: widget.draft.area,
+                    padding: const EdgeInsets.all(48),
+                    maxZoom: 17,
+                  )
+                : null,
+          ),
           children: [
             TileLayer(urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', userAgentPackageName: 'no.afgruppen.afd.sokshund'),
             PolylineLayer(polylines: [

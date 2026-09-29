@@ -45,3 +45,13 @@ Workflowene startes kun manuelt fra GitHub Actions via **Run workflow**. Commit/
 - Historikk viser både oppdragsrapporter og gjennomførte treninger.
 - Rapportvisning er strukturert i seksjoner, viser bilder og har eksport til PDF/Word.
 - Rapportnavn følger RS-Firmanavn-YYYY-MM-DD.
+
+
+## v0.2.1
+- SafeArea nederst på skjema-/lagresider for Samsung/Android navigasjonsfelt.
+- AFD-gul farge på FloatingActionButton og FilledButton.
+- Litt ekstra luft under 'Nytt treningsfunn'.
+
+## v0.2.2
+- PDF- og Word-rapporter bruker offisiell AF-logo (`assets/images/af_logo.png`).
+- Ved start av et søk med forhåndsdefinert søksområde tilpasses kartet automatisk slik at hele området vises med margin.
